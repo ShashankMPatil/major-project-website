@@ -1,45 +1,52 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Package, Clock, CheckCircle, MapPin } from 'lucide-react';
-
+import Cookies from 'js-cookie';
+import axios from 'axios';
 const Home = () => {
   const navigate = useNavigate();
+  const [recentItems, setRecentItems] = useState([]);
 
-  const recentItems = [
-    {
-      id: '1',
-      type: 'lost',
-      title: 'Blue Backpack',
-      location: 'Library',
-      date: '2024-03-10',
-      status: 'pending',
-      description: 'Nike backpack with laptop compartment',
-      image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&q=80&w=400'
-    },
-    {
-      id: '2',
-      type: 'found',
-      title: 'iPhone Charger',
-      location: 'Student Center',
-      date: '2024-03-08',
-      status: 'matched',
-      description: 'White Apple charging cable',
-      matchedWith: {
-        name: 'John Doe',
-        email: 'john.doe@college.edu'
-      }
-    },
-    {
-      id: '3',
-      type: 'lost',
-      title: 'Water Bottle',
-      location: 'Gymnasium',
-      date: '2024-03-05',
-      status: 'returned',
-      description: 'Metal water bottle, black color',
-      image: 'https://images.unsplash.com/photo-1602143407151-7111542de6e8?auto=format&fit=crop&q=80&w=400'
+ useEffect(() => {
+  const token = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZjBiMDJlYjQyMTAyZWNmZTY5ZDJmMyIsImlhdCI6MTc0MzgyNjk5MCwiZXhwIjoxNzQ2NDE4OTkwfQ.0nQ_pl1kPvxqnbrsehhLCCmRtFQVYqv73a4u5lFok5A';
+  Cookies.set('authToken', token);
+
+  const fetchRecentItems = async () => {
+    try {
+      const authToken = Cookies.get('authToken');
+
+      const profileResponse = await axios.get('http://localhost:3000/api/user/profile', {
+        headers: { Authorization: authToken },
+      });
+
+      const lostItemIds = profileResponse.data.lostItems || [];
+      const foundItemIds = profileResponse.data.foundItems || [];
+
+      const lostItems = await Promise.all(
+        lostItemIds.map((id: string) =>
+          axios.get(`http://localhost:3000/api/lost-item/item/${id}`, {
+            headers: { Authorization: authToken },
+          }).then(res => ({ ...res.data, type: 'lost' }))
+        )
+      );
+
+      const foundItems = await Promise.all(
+        foundItemIds.map((id: string) =>
+          axios.get(`http://localhost:3000/api/found-item/item/${id}`, {
+            headers: { Authorization: authToken },
+          }).then(res => ({ ...res.data, type: 'found' }))
+        )
+      );
+
+      setRecentItems([...lostItems, ...foundItems]);
+    } catch (error) {
+      console.error('Error fetching recent items:', error);
     }
-  ];
+  };
+
+  fetchRecentItems();
+}, []);
+
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -125,16 +132,26 @@ const Home = () => {
                   <p className="text-sm text-gray-600">{item.description}</p>
                   <p className="text-sm text-gray-500 flex items-center">
                     <MapPin className="h-4 w-4 mr-1" />
-                    {item.location}
+                    {item.location || 'College'}
                   </p>
                 </div>
                 {item.image && (
-                  <div className="relative h-24 rounded-lg overflow-hidden">
+                  <div className="relative h-24 w-full rounded-lg overflow-hidden">
                     <img
                       src={item.image}
                       alt={item.title}
-                      className="absolute inset-0 w-full h-full object-cover"
+                      className="absolute inset-0 w-full h-full object-contain"
                     />
+                  </div>
+                )}
+                {item.image && (
+                  <div className="mt-2 flex justify-end">
+                    <button
+                      onClick={() => navigate(`/matched-items/${item._id}?type=${item.type}`)}
+                      className="bg-indigo-600 text-white text-xs px-2 py-1 rounded-md hover:bg-indigo-700 transition-colors"
+                    >
+                      See Matched Images
+                    </button>
                   </div>
                 )}
               </div>

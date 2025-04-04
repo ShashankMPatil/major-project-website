@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Mail, Lock, Phone } from 'lucide-react';
 
 const Auth = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const [isLogin, setIsLogin] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',

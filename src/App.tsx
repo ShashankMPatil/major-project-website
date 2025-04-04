@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import Auth from './pages/Auth';
 import Profile from './pages/Profile';
 import ReportItem from './pages/ReportItem';
+import MatchedItems from './pages/MatchedItems';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
             <Route path="/auth" element={<Auth />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/report/:type" element={<ReportItem />} />
+            <Route path="/matched-items/:itemId" element={<MatchedItems />} />
           </Routes>
         </main>
         <Toaster position="bottom-right" />
